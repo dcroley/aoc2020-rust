@@ -29,72 +29,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for aline in lines.iter() {
 
         if aline.is_empty() {
-            let mut valid_keys = true;
-            let mut valid_values = true;
-            for k in req.iter() {
-                if !passport.contains_key(k) {
-                    valid_keys = false;
-                    break;
-                } else {
-                    let mut value_valid = true;
-                    if k.to_string() == "byr" {
-                        let year:u16 = passport.get(k).unwrap().parse().unwrap();
-                        if year < 1920 || year > 2002 {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "iyr" {
-                        let year:u16 = passport.get(k).unwrap().parse().unwrap();
-                        if year < 2010 || year > 2020 {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "eyr" {
-                        let year:u16 = passport.get(k).unwrap().parse().unwrap();
-                        if year < 2020 || year > 2030 {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "hgt" {
-                        let val = passport.get(k).unwrap();
-                        if val.ends_with("cm") {
-                            let hgt:u16 = val.strip_suffix("cm").unwrap().parse().unwrap();
-                            if hgt < 150 || hgt > 193 {
-                                value_valid = false;
-                            }
-                        } else if val.ends_with("in") {
-                            let hgt:u16 = val.strip_suffix("in").unwrap().parse().unwrap();
-                            if hgt < 59 || hgt > 76 {
-                                value_valid = false;
-                            }
-                        } else {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "hcl" {
-                        let re = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
-                        if !re.is_match(passport.get(k).unwrap()) {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "ecl" {
-                        let re = Regex::new(r"^amb|blu|brn|gry|grn|hzl|oth$").unwrap();
-                        if !re.is_match(passport.get(k).unwrap()) {
-                            value_valid = false;
-                        }
-                    } else if k.to_string() == "pid" {
-                        let re = Regex::new(r"^\d{9}$").unwrap();
-                        if !re.is_match(passport.get(k).unwrap()) {
-                            value_valid = false;
-                        }
-                    }
-                    println!("k={}, v={}, valid={}", k.to_string(), passport.get(k).unwrap(), value_valid);
-                    valid_values &= value_valid;
-                }
-            }
-            if valid_keys {
-                total_present += 1;
-            }
-            if valid_values && valid_keys {
-                total_valid += 1;
-            }
-            passport.clear();
-
+            let tmp = process_line(req, &mut passport);
+            total_present += tmp.0;
+            total_valid += tmp.1;
         } else {
 
             for kp in aline.split_whitespace() {
@@ -107,17 +44,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // handle last one
-    // let mut valid = true;
-    // for k in req.iter() {
-    //     if !passport.contains_key(k) {
-    //         valid = false;
-    //         break;
-    //     }
-    // }
-    // if valid {
-    //     total_present += 1;
-    // }
-    // passport.clear();
+    let tmp = process_line(req, &mut passport);
+    total_present += tmp.0;
+    total_valid += tmp.1;
 
     println!("total = {}", total_present);
 
@@ -126,5 +55,78 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("total valid = {}", total_valid);
 
     Ok(())
+}
+
+
+fn process_line(req: [&str; 7], passport: &mut HashMap<&str, String>) -> (isize, isize) {
+    let mut valid_keys = true;
+    let mut valid_values = true;
+
+    for k in req.iter() {
+        if !passport.contains_key(k) {
+            valid_keys = false;
+            break;
+        } else {
+            let mut value_valid = true;
+            if k.to_string() == "byr" {
+                let year: u16 = passport.get(k).unwrap().parse().unwrap();
+                if year < 1920 || year > 2002 {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "iyr" {
+                let year: u16 = passport.get(k).unwrap().parse().unwrap();
+                if year < 2010 || year > 2020 {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "eyr" {
+                let year: u16 = passport.get(k).unwrap().parse().unwrap();
+                if year < 2020 || year > 2030 {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "hgt" {
+                let val = passport.get(k).unwrap();
+                if val.ends_with("cm") {
+                    let hgt: u16 = val.strip_suffix("cm").unwrap().parse().unwrap();
+                    if hgt < 150 || hgt > 193 {
+                        value_valid = false;
+                    }
+                } else if val.ends_with("in") {
+                    let hgt: u16 = val.strip_suffix("in").unwrap().parse().unwrap();
+                    if hgt < 59 || hgt > 76 {
+                        value_valid = false;
+                    }
+                } else {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "hcl" {
+                let re = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
+                if !re.is_match(passport.get(k).unwrap()) {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "ecl" {
+                let re = Regex::new(r"^amb|blu|brn|gry|grn|hzl|oth$").unwrap();
+                if !re.is_match(passport.get(k).unwrap()) {
+                    value_valid = false;
+                }
+            } else if k.to_string() == "pid" {
+                let re = Regex::new(r"^\d{9}$").unwrap();
+                if !re.is_match(passport.get(k).unwrap()) {
+                    value_valid = false;
+                }
+            }
+            println!("k={}, v={}, valid={}", k.to_string(), passport.get(k).unwrap(), value_valid);
+            valid_values &= value_valid;
+        }
+    }
+    let mut total_p = 0;
+    if valid_keys {
+        total_p += 1;
+    }
+    let mut total_v = 0;
+    if valid_values && valid_keys {
+        total_v += 1;
+    }
+    passport.clear();
+    (total_p, total_v)
 }
 
