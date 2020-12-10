@@ -56,20 +56,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if sum > magic_number {
             continue;
         }
+        let mut smallest = numbers[a];
+        let mut largest = numbers[a];
         for b in a+1..numbers.len() {
             sum += numbers[b];
+            if numbers[b] < smallest {
+                smallest = numbers[b];
+            }
+            if numbers[b] > largest {
+                largest = numbers[b];
+            }
             if sum == magic_number {
                 println!("found it from {}, {}", numbers[a], numbers[b]);
-                let mut smallest = numbers[a];
-                let mut largest = numbers[b];
-                for x in a..b+1 {
-                    if numbers[x] < smallest {
-                        smallest = numbers[x];
-                    }
-                    if numbers[x] > largest {
-                        largest = numbers[x];
-                    }
-                }
                 println!("{} + {} = {}", smallest, largest, smallest + largest);
                 found_it = true;
                 break;
